@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reliability Gateway - Final Report</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel2: #1c2330;
+      --line: #30363d;
+      --txt: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --red: #f85149;
+      --amber: #d29922;
+      --violet: #bc8cff;
+      --cyan: #39c5cf;
+      --shadow: 0 1px 0 rgba(255,255,255,.03), 0 10px 28px rgba(0,0,0,.38);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--txt);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    code,
+    .mono {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    a { color: var(--accent); }
+
+    .wrap {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 24px 20px 64px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr);
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      min-height: 270px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero:after {
+      content: "";
+      position: absolute;
+      inset: auto -120px -160px auto;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(88,166,255,.2), transparent 62%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 12px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 780px;
+      font-size: 30px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    p {
+      margin: 0 0 10px;
+    }
+
+    .sub {
+      max-width: 790px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .tagbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.02);
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .g2 { grid-template-columns: 1fr 1fr; }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    .g4 { grid-template-columns: repeat(4, 1fr); }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric:last-child { border-bottom: 0; }
+
+    .metric .k {
+      color: var(--muted);
+    }
+
+    .metric .v {
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .bigmetric {
+      min-height: 116px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel2);
+    }
+
+    .bigmetric .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bigmetric .value {
+      display: block;
+      margin-top: 7px;
+      font-size: 27px;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .bigmetric .note {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .meter {
+      height: 7px;
+      margin-top: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #0f1622;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+    }
+
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .node {
+      flex: 1;
+      min-width: 162px;
+      padding: 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel2);
+    }
+
+    .node .nt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .node .nd {
+      min-height: 38px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .node .verdict {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .node.hit { border-color: var(--cyan); }
+    .node.hit .verdict { color: var(--cyan); }
+    .node.pass { border-color: var(--green); }
+    .node.pass .verdict { color: var(--green); }
+    .node.skip { border-color: var(--amber); }
+    .node.skip .verdict { color: var(--amber); }
+    .node.fail { border-color: var(--red); }
+    .node.fail .verdict { color: var(--red); }
+
+    .arrow {
+      flex: 0 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--line);
+      font-size: 22px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      display: inline-block;
+      border-radius: 50%;
+    }
+
+    .s-closed { background: var(--green); }
+    .s-open { background: var(--red); }
+    .s-half { background: var(--amber); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 22px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .b-ok { color: var(--green); background: rgba(63,185,80,.14); }
+    .b-warn { color: var(--amber); background: rgba(210,153,34,.16); }
+    .b-bad { color: var(--red); background: rgba(248,81,73,.14); }
+    .b-info { color: var(--cyan); background: rgba(57,197,207,.12); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    th,
+    td {
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    td.num,
+    th.num {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    pre {
+      overflow-x: auto;
+      margin: 10px 0 0;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0b1018;
+      color: var(--txt);
+      font-size: 12.5px;
+    }
+
+    code {
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: #0f1622;
+      color: var(--txt);
+    }
+
+    .callout {
+      border-left: 3px solid var(--accent);
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(88,166,255,.07);
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 19px;
+    }
+
+    .list li { margin: 6px 0; }
+
+    .foot {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 960px) {
+      .top,
+      .g2,
+      .g3,
+      .g4 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body { background: #fff; color: #111827; }
+      .card, .node, .bigmetric {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      .card {
+        background: #fff;
+        color: #111827;
+      }
+      .node, .bigmetric {
+        background: #f8fafc;
+      }
+      h2, .sub, .metric .k, .node .nd, .foot {
+        color: #475569;
+      }
+      code, pre {
+        background: #f1f5f9;
+        color: #111827;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <section class="card hero">
+        <div>
+          <p class="eyebrow">Final report and presentation</p>
+          <h1>Reliability Gateway for Production LLM Agents</h1>
+          <p class="sub">
+            Hệ thống gateway được hoàn thiện với semantic cache, circuit breaker,
+            provider fallback, static fallback, Redis shared cache, chaos testing và
+            metrics có thể tái lập.
+          </p>
+          <div class="tagbar">
+            <span class="tag">Python</span>
+            <span class="tag">Circuit Breaker</span>
+            <span class="tag">Redis</span>
+            <span class="tag">Chaos Test</span>
+            <span class="tag">35 passed + 7 xpassed</span>
+          </div>
+        </div>
+        <p class="foot">
+          Artifacts: <code>reports/metrics.json</code>, <code>reports/metrics.csv</code>,
+          <code>reports/final_report.md</code>
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Measured run</h2>
+        <div class="metric"><span class="k">Total requests</span><span class="v">300</span></div>
+        <div class="metric"><span class="k">Availability</span><span class="v" style="color:var(--green)">99.00%</span></div>
+        <div class="metric"><span class="k">P95 latency</span><span class="v">322.05 ms</span></div>
+        <div class="metric"><span class="k">Cache hit rate</span><span class="v" style="color:var(--cyan)">59.00%</span></div>
+        <div class="metric"><span class="k">Fallback success</span><span class="v" style="color:var(--green)">96.34%</span></div>
+        <div class="metric"><span class="k">Circuit opened</span><span class="v">9 times</span></div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-bottom:16px">
+      <h2>Request flow</h2>
+      <div class="flow">
+        <div class="node hit">
+          <div class="nt"><span class="dot s-half"></span>User</div>
+          <div class="nd">Prompt đi vào ReliabilityGateway</div>
+          <div class="verdict">entry point</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node hit">
+          <div class="nt"><span class="dot s-half"></span>Semantic Cache</div>
+          <div class="nd">n-gram cosine, TTL, privacy guardrail, false-hit detection</div>
+          <div class="verdict">hit = cost 0</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node pass">
+          <div class="nt"><span class="dot s-closed"></span>CB · primary</div>
+          <div class="nd">CLOSED / OPEN / HALF_OPEN state machine</div>
+          <div class="verdict">fail fast when open</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node pass">
+          <div class="nt"><span class="dot s-closed"></span>CB · backup</div>
+          <div class="nd">Backup provider absorbs primary failure</div>
+          <div class="verdict">fallback route</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node skip">
+          <div class="nt"><span class="dot s-open"></span>Static fallback</div>
+          <div class="nd">Degraded response if all providers fail</div>
+          <div class="verdict">last safety net</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid g4" style="margin-bottom:16px">
+      <div class="bigmetric">
+        <span class="label">Availability</span>
+        <span class="value" style="color:var(--green)">0.9900</span>
+        <span class="note">SLO target: >= 99%</span>
+        <div class="meter"><span style="width:99%"></span></div>
+      </div>
+      <div class="bigmetric">
+        <span class="label">Error rate</span>
+        <span class="value">0.0100</span>
+        <span class="note">Static fallback failures</span>
+        <div class="meter"><span style="width:1%;background:var(--red)"></span></div>
+      </div>
+      <div class="bigmetric">
+        <span class="label">P99 latency</span>
+        <span class="value">333.74 ms</span>
+        <span class="note">Well below 2500 ms target</span>
+        <div class="meter"><span style="width:13%"></span></div>
+      </div>
+      <div class="bigmetric">
+        <span class="label">Cost saved</span>
+        <span class="value" style="color:var(--cyan)">0.177</span>
+        <span class="note">Estimated from cache hits</span>
+        <div class="meter"><span style="width:59%"></span></div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-bottom:16px">
+      <section class="card">
+        <h2>SLO results</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>SLI</th>
+              <th class="num">Target</th>
+              <th class="num">Actual</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Availability</td><td class="num">>= 99%</td><td class="num">99.00%</td><td><span class="badge b-ok">met</span></td></tr>
+            <tr><td>Latency P95</td><td class="num">&lt; 2500 ms</td><td class="num">322.05 ms</td><td><span class="badge b-ok">met</span></td></tr>
+            <tr><td>Fallback success</td><td class="num">>= 95%</td><td class="num">96.34%</td><td><span class="badge b-ok">met</span></td></tr>
+            <tr><td>Cache hit rate</td><td class="num">>= 10%</td><td class="num">59.00%</td><td><span class="badge b-ok">met</span></td></tr>
+            <tr><td>Recovery time</td><td class="num">&lt; 5000 ms</td><td class="num">2324.10 ms</td><td><span class="badge b-ok">met</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Implementation checklist</h2>
+        <div class="metric"><span class="k">Circuit breaker</span><span class="v"><span class="badge b-ok">done</span></span></div>
+        <div class="metric"><span class="k">Semantic cache</span><span class="v"><span class="badge b-ok">done</span></span></div>
+        <div class="metric"><span class="k">Privacy guardrails</span><span class="v"><span class="badge b-ok">done</span></span></div>
+        <div class="metric"><span class="k">Redis shared cache</span><span class="v"><span class="badge b-ok">done</span></span></div>
+        <div class="metric"><span class="k">Chaos simulation</span><span class="v"><span class="badge b-ok">done</span></span></div>
+        <div class="metric"><span class="k">Report artifacts</span><span class="v"><span class="badge b-ok">done</span></span></div>
+      </section>
+    </div>
+
+    <div class="grid g2" style="margin-bottom:16px">
+      <section class="card">
+        <h2>Configuration</h2>
+        <table>
+          <thead>
+            <tr><th>Setting</th><th class="num">Value</th><th>Reason</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>failure_threshold</td><td class="num">3</td><td>Open circuit after repeated provider failures.</td></tr>
+            <tr><td>reset_timeout_seconds</td><td class="num">2</td><td>Quick recovery probes during chaos simulation.</td></tr>
+            <tr><td>success_threshold</td><td class="num">1</td><td>One successful HALF_OPEN probe closes circuit.</td></tr>
+            <tr><td>cache TTL</td><td class="num">300s</td><td>Reusable lab queries without permanent stale answers.</td></tr>
+            <tr><td>similarity_threshold</td><td class="num">0.92</td><td>Conservative threshold to reduce false hits.</td></tr>
+            <tr><td>load_test</td><td class="num">100/scenario</td><td>Enough samples for cache/fallback/circuit metrics.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Cache and Redis evidence</h2>
+        <div class="callout">
+          <h3>Why Redis matters</h3>
+          <p>
+            In-memory cache is local to one process. Redis lets multiple gateway
+            instances share the same cached response and TTL.
+          </p>
+        </div>
+        <pre class="mono">Shared state proof:
+('visible from second instance', 1.0)
+
+Redis CLI key:
+rl:evidence:c2924cb05c03</pre>
+      </section>
+    </div>
+
+    <section class="card" style="margin-bottom:16px">
+      <h2>Chaos scenarios</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Expected behavior</th>
+            <th>Observed behavior</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">primary_timeout_100</td>
+            <td>Primary fails; traffic falls back to backup/static path.</td>
+            <td>Circuit opened and fallback path handled requests.</td>
+            <td><span class="badge b-ok">pass</span></td>
+          </tr>
+          <tr>
+            <td class="mono">primary_flaky_50</td>
+            <td>Primary intermittently fails; fallback absorbs failures.</td>
+            <td>Mixed routes observed, scenario passed.</td>
+            <td><span class="badge b-ok">pass</span></td>
+          </tr>
+          <tr>
+            <td class="mono">all_healthy</td>
+            <td>Providers mostly succeed; cache warms over repeated queries.</td>
+            <td>Scenario passed and cache hit rate increased.</td>
+            <td><span class="badge b-ok">pass</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="grid g2" style="margin-bottom:16px">
+      <section class="card">
+        <h2>Failure analysis</h2>
+        <p>
+          Điểm yếu còn lại là circuit breaker state vẫn local theo từng gateway
+          instance. Trong production nhiều instance, mỗi instance có thể tự phát hiện
+          provider lỗi riêng, gây thêm tải trước khi tất cả circuit cùng mở.
+        </p>
+        <ul class="list">
+          <li>Đưa breaker state/counter vào Redis hoặc shared coordination layer.</li>
+          <li>Thêm jitter cho HALF_OPEN probes để tránh nhiều instance probe cùng lúc.</li>
+          <li>Thêm quality SLO để response tệ không bị lưu vào cache.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Talk track for presentation</h2>
+        <ol class="list">
+          <li>Vấn đề: LLM provider có thể chậm, lỗi hoặc tốn chi phí.</li>
+          <li>Giải pháp: cache trước, sau đó circuit breaker và fallback provider.</li>
+          <li>Redis: giúp cache được chia sẻ giữa nhiều gateway instance.</li>
+          <li>Kết quả: 300 requests, 99% availability, P95 322.05 ms, cache hit 59%.</li>
+          <li>Cải tiến tiếp theo: shared circuit breaker state cho production.</li>
+        </ol>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>How to reproduce</h2>
+      <pre class="mono">cd "D:\VinUni\GG Colab\Day 25\2A202600876-BuiMinhHieu-Day25"
+docker-compose up -d
+python -m pytest -q
+python scripts/run_chaos.py --config configs/default.yaml --out reports/metrics.json
+python -m ruff check src tests scripts
+python -m mypy src</pre>
+      <p class="foot">
+        Khi không dùng Redis nữa: <code>docker-compose down</code>. Có thể mở file này
+        trong Chrome/Edge và dùng Print → Save as PDF để nộp.
+      </p>
+    </section>
+  </main>
+</body>
+</html>
